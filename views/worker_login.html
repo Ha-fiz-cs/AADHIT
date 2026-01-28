@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Login - Community Workforce</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* ===== RED BLUE WHITE PALETTE ===== */
+            --bg-navy: #0F172A;
+            --white: #FFFFFF;
+            --glass-bg: rgba(255, 255, 255, 0.55);
+
+            --blue-primary: #2563EB;
+            --red-accent: #DC2626;
+
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+
+            --border-soft: rgba(15, 23, 42, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #1E293B, var(--bg-navy));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* ========== PARTICLE CANVAS ========== */
+        #particles {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+        }
+
+        /* ========== GLASS CARD ========== */
+        .card {
+            width: 360px;
+            padding: 32px;
+
+            background: var(--glass-bg);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
+
+            border-radius: 18px;
+            border: 1px solid var(--border-soft);
+
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.55),
+                inset 0 0 28px rgba(255, 255, 255, 0.6);
+        }
+
+        /* ========== HEADINGS ========== */
+        h2 {
+            text-align: center;
+            margin-bottom: 22px;
+            font-size: 24px;
+            font-weight: 700;
+
+            background: linear-gradient(135deg,
+                    var(--blue-primary),
+                    var(--red-accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ========== FORM ========== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-soft);
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+        }
+
+        /* ========== BUTTON ========== */
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+
+            background: linear-gradient(135deg,
+                    var(--blue-primary),
+                    var(--red-accent));
+            color: #ffffff;
+
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 10px 22px rgba(0, 0, 0, 0.45),
+                0 0 18px rgba(37, 99, 235, 0.45),
+                0 0 18px rgba(220, 38, 38, 0.35);
+        }
+
+        /* ========== TOGGLE TEXT ========== */
+        .toggle {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+
+            background: linear-gradient(135deg,
+                    var(--blue-primary),
+                    var(--red-accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ========== UTIL ========== */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="particles"></canvas>
+
+    <div class="card">
+
+        <!-- LOGIN -->
+        <div id="login-form">
+            <h2>Worker Login</h2>
+
+            <form action="/api/login" method="POST">
+                <div class="form-group">
+                    <label>Adhithi ID or Email</label>
+                    <input type="text" name="identifier" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+
+                <button type="submit">Login</button>
+            </form>
+
+            <div class="toggle" onclick="toggleView()">New here? Register</div>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="register-form" class="hidden">
+            <h2>Worker Registration</h2>
+
+            <form action="/api/register" method="POST">
+                <input type="hidden" name="role" value="worker">
+
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Adhithi ID</label>
+                    <input type="text" name="adhithiId" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Skills (comma separated)</label>
+                    <input type="text" name="skills" placeholder="e.g., Plumbing, Carpentry" required>
+                </div>
+
+                <button type="submit">Register</button>
+            </form>
+
+            <div class="toggle" onclick="toggleView()">Already have an account? Login</div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ========== FORM TOGGLE ========== */
+        function toggleView() {
+            const login = document.getElementById("login-form");
+            const register = document.getElementById("register-form");
+            login.classList.toggle("hidden");
+            register.classList.toggle("hidden");
+        }
+
+        /* ========== SOFT GLOWING PARTICLES ========== */
+        const canvas = document.getElementById("particles");
+        const ctx = canvas.getContext("2d");
+        let particles = [];
+        const COUNT = 45;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        for (let i = 0; i < COUNT; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 2.5 + 1,
+                dx: (Math.random() - 0.5) * 0.25,
+                dy: (Math.random() - 0.5) * 0.25,
+                alpha: Math.random() * 0.35 + 0.25
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+
+                if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = "rgba(255,255,255,0.6)";
+                ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+                ctx.fill();
+            });
+
+            ctx.shadowBlur = 0;
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+
+</body>
+
+</html>

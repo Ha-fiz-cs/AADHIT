@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-navy: #0F172A;
+            --blue: #2563EB;
+            --red: #DC2626;
+
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+
+            --border-soft: rgba(255, 255, 255, 0.15);
+            --glass-card: rgba(255, 255, 255, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #1E293B, var(--bg-navy));
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* PARTICLES */
+        #particles {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+        }
+
+        /* LAYOUT */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border-soft);
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-bottom: 1px solid var(--border-soft);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px;
+            margin: 0;
+            flex: 1;
+        }
+
+        .menu-link {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 16px;
+            color: #CBD5E1;
+            text-decoration: none;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+
+        .menu-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .menu-link.active {
+            background: linear-gradient(135deg, var(--blue), var(--red));
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .user-profile-mini {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid var(--border-soft);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--blue), var(--red));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        /* MAIN */
+        .main-content {
+            flex: 1;
+            padding: 36px;
+            overflow-y: auto;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--blue), var(--red));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-soft);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ===== GLASS CARDS ===== */
+        .card {
+            background: var(--glass-card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+            margin-bottom: 24px;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        .stat-card {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--blue), var(--red));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-info h3 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .stat-info .value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* JOBS */
+        .job-card {
+            background: var(--glass-card);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--blue), var(--red));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+        }
+
+        /* TABS */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="particles"></canvas>
+
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-briefcase"></i> CommunityApp
+            </div>
+
+            <ul class="sidebar-menu">
+                <li><a class="menu-link active" onclick="switchTab('dashboard',this)">🏠 Dashboard</a></li>
+                <li><a class="menu-link" onclick="switchTab('jobs',this)">🔍 Find Jobs</a></li>
+                <li><a class="menu-link" onclick="switchTab('history',this)">📜 Work History</a></li>
+                <li><a class="menu-link" onclick="switchTab('welfare',this)">❤️ Welfare</a></li>
+                <li><a class="menu-link" onclick="switchTab('checkup',this)">🩺 Routine Checkup</a></li>
+            </ul>
+
+            <div class="user-profile-mini">
+                <div class="avatar-circle" id="nav-initial">U</div>
+                <div>
+                    <div id="nav-name">User</div>
+                    <div style="font-size:12px;color:#CBD5E1;">Worker</div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN -->
+        <main class="main-content">
+            <div class="header-bar">
+                <div class="page-title" id="page-title">Dashboard</div>
+                <a href="/api/logout" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="card stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+                        <div class="stat-info">
+                            <h3>Stability Score</h3>
+                            <div class="value" id="dash-score">-</div>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
+                        <div class="stat-info">
+                            <h3>Applications</h3>
+                            <div class="value" id="dash-apps">0</div>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-check"></i></div>
+                        <div class="stat-info">
+                            <h3>Completed</h3>
+                            <div class="value" id="dash-completed">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:24px;">
+                    <h3>Application Status</h3>
+                    <div id="dash-applications-list">Loading...</div>
+                </div>
+            </div>
+
+            <!-- JOBS -->
+            <div id="tab-jobs" class="tab-content">
+                <div class="card">
+                    <h3>Available Jobs</h3>
+                    <div id="jobs-list">Loading...</div>
+                </div>
+            </div>
+
+            <!-- HISTORY -->
+            <div id="tab-history" class="tab-content">
+                <div class="card">
+                    <h3>Work History</h3>
+                    <div id="history-table">Coming soon</div>
+                </div>
+            </div>
+
+            <!-- WELFARE -->
+            <div id="tab-welfare" class="tab-content">
+                <div class="card">
+                    <h3>Government Welfare Schemes</h3>
+                    <p style="color:var(--text-muted); margin-bottom:20px;">Available schemes for registered workers:
+                    </p>
+                    <div id="welfare-list" style="display:grid; gap:16px;">Loading...</div>
+                </div>
+            </div>
+
+            <!-- ROUTINE CHECKUP -->
+            <div id="tab-checkup" class="tab-content">
+
+                <!-- Upcoming Camp -->
+                <div class="card"
+                    style="border-left: 5px solid var(--emerald); background: linear-gradient(to right, rgba(16, 185, 129, 0.1), white);">
+                    <h3 style="color:var(--emerald); margin-top:0;"><i class="fa-solid fa-hospital-user"></i> Upcoming
+                        Medical Camp</h3>
+                    <div id="upcoming-camp">Loading...</div>
+                </div>
+
+                <!-- History -->
+                <div class="card">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Checkup History</h3>
+                    <div id="checkup-history">Loading...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Init
+        loadData();
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/worker/data');
+                // Auto redirect if not logged in
+                if (res.redirected) return window.location.href = '/worker/login';
+
+                const data = await res.json();
+                const { worker, jobs, applications, history, welfareSchemes, healthCheckups, upcomingCamps } = data;
+
+                // Profile
+                document.getElementById('nav-name').innerText = worker.name;
+                document.getElementById('nav-initial').innerText = worker.name.charAt(0).toUpperCase();
+
+                // Stats
+                document.getElementById('dash-score').innerText = worker.stabilityScore || 0;
+                document.getElementById('dash-apps').innerText = applications.length;
+                document.getElementById('dash-completed').innerText = history.length;
+
+                // Applications List
+                renderApplications(applications, jobs);
+
+                // Jobs List
+                renderJobs(jobs, applications);
+
+                // History
+                renderHistory(history, jobs);
+
+                // Welfare
+                renderWelfare(welfareSchemes);
+
+                // Checkups
+                renderCheckups(healthCheckups, upcomingCamps);
+
+            } catch (e) { console.error(e); }
+        }
+
+        function renderWelfare(schemes) {
+            const list = document.getElementById('welfare-list');
+            if (!schemes || schemes.length === 0) {
+                list.innerHTML = '<p>No schemes available.</p>';
+                return;
+            }
+            list.innerHTML = schemes.map(s => `
+                <div style="padding:16px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+                    <div style="font-weight:600; color:var(--blue); font-size:16px;">${s.title}</div>
+                    <div style="font-size:14px; color:var(--text-dark); margin:4px 0;">${s.desc}</div>
+                    <a href="${s.link}" style="font-size:13px; color:var(--emerald); font-weight:500; text-decoration:none;">View Details &rarr;</a>
+                </div>
+            `).join('');
+        }
+
+        function renderCheckups(history, camps) {
+            // History
+            const historyDiv = document.getElementById('checkup-history');
+            if (!history || history.length === 0) {
+                historyDiv.innerHTML = '<p>No past checkups.</p>';
+            } else {
+                historyDiv.innerHTML = history.map(h => `
+                    <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid #eee; align-items:center;">
+                        <div>
+                            <div style="font-weight:600;">${h.type}</div>
+                            <div style="font-size:12px; color:var(--text-muted);">${h.doctor} • <span style="font-weight:bold;">${h.status}</span></div>
+                        </div>
+                        <div style="font-size:13px; color:var(--text-dark); background:#f1f5f9; padding:4px 8px; border-radius:4px;">${new Date(h.date).toLocaleDateString()}</div>
+                    </div>
+                 `).join('');
+            }
+
+            // Camp
+            const campDiv = document.getElementById('upcoming-camp');
+            if (!camps || camps.length === 0) {
+                campDiv.innerHTML = '<p>No upcoming camps.</p>';
+            } else {
+                const camp = camps[0]; // Show first
+                campDiv.innerHTML = `
+                    <div style="font-size:16px; font-weight:700; color:var(--text-dark); margin-bottom:8px;">${camp.title}</div>
+                    <div style="display:flex; gap:20px; color:var(--text-muted); font-size:14px; margin-bottom:12px;">
+                        <span><i class="fa-solid fa-location-dot"></i> ${camp.location}</span>
+                        <span><i class="fa-solid fa-calendar"></i> ${new Date(camp.date).toLocaleDateString()}</span>
+                        <span><i class="fa-solid fa-clock"></i> ${camp.time}</span>
+                    </div>
+                    <div style="font-size:14px; line-height:1.4;">${camp.desc}</div>
+                    <button class="btn-primary" style="margin-top:15px; background:linear-gradient(135deg, var(--emerald), #059669);">Register Now</button>
+                 `;
+            }
+        }
+
+        function renderApplications(apps, jobs) {
+            const list = document.getElementById('dash-applications-list');
+            if (apps.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted)">No active applications.</p>';
+                return;
+            }
+            list.innerHTML = apps.map(app => {
+                // app.jobId is populated as an object by server.js
+                const jobTitle = app.jobId && app.jobId.title ? app.jobId.title : 'Unknown Job';
+                return `
+                    <div style="padding:12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
+                        <div>
+                            <strong>${jobTitle}</strong>
+                            <div style="font-size:12px; color:var(--text-muted)">Applied: ${new Date().toLocaleDateString()}</div>
+                        </div>
+                        <span style="font-weight:600; color:${app.status === 'accepted' ? 'green' : 'orange'}">
+                            ${app.status.toUpperCase()}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderJobs(jobs, applications) {
+            const list = document.getElementById('jobs-list');
+            const openJobs = jobs.filter(j => j.status === 'open');
+
+            if (openJobs.length === 0) {
+                list.innerHTML = '<p>No jobs available right now.</p>';
+                return;
+            }
+
+            list.innerHTML = openJobs.map(job => {
+                // Check if applied (Handle app.jobId being an object)
+                const hasApplied = applications.some(a => {
+                    const appId = a.jobId && a.jobId._id ? a.jobId._id : a.jobId;
+                    return appId === job._id;
+                });
+
+                return `
+                   <div class="job-card">
+                       <div>
+                           <div style="font-weight:700; font-size:16px;">${job.title}</div>
+                           <div style="color:var(--text-muted); font-size:14px; margin-top:4px;">
+                               $${job.wage} • ${job.duration} • ${job.location}
+                           </div>
+                           <div style="font-size:12px; color:var(--blue); margin-top:4px;">
+                               Requires: ${job.requiredSkill}
+                           </div>
+                       </div>
+                       <button class="btn-primary" 
+                           onclick="applyForJob('${job._id}')" 
+                           ${hasApplied ? 'disabled' : ''}>
+                           ${hasApplied ? 'Applied' : 'Apply Now'}
+                       </button>
+                   </div> 
+                `;
+            }).join('');
+        }
+
+        function renderHistory(history, jobs) {
+            const div = document.getElementById('history-table');
+            if (history.length === 0) {
+                div.innerHTML = '<p>No work history yet.</p>';
+                return;
+            }
+            div.innerHTML = history.map(h => {
+                // History might link to jobId string
+                const job = jobs.find(j => j._id === h.jobId) || { title: 'Unknown Job' };
+                return `
+                    <div style="padding:10px; border-bottom:1px solid #eee;">
+                        Completed <strong>${job.title}</strong> on ${new Date(h.date).toLocaleDateString()}
+                        <span style="float:right; font-weight:bold; color:green">+$${h.wagePaid}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function applyForJob(jobId) {
+            if (!confirm("Apply for this job?")) return;
+            try {
+                const res = await fetch('/api/worker/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jobId })
+                });
+                if (res.ok) {
+                    alert("Application Sent!");
+                    loadData();
+                } else {
+                    alert("Failed to apply");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function switchTab(tab, el) {
+            document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+            el.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+
+            document.getElementById('page-title').innerText =
+                tab.charAt(0).toUpperCase() + tab.slice(1);
+        }
+
+        /* PARTICLES */
+        const c = document.getElementById("particles"), x = c.getContext("2d");
+        let p = []; function r() { c.width = innerWidth; c.height = innerHeight }
+        addEventListener("resize", r); r();
+        for (let i = 0; i < 45; i++)p.push({ x: Math.random() * c.width, y: Math.random() * c.height, r: Math.random() * 2 + 1, dx: (Math.random() - .5) * .25, dy: (Math.random() - .5) * .25, a: Math.random() * .4 + .2 });
+        (function a() {
+            x.clearRect(0, 0, c.width, c.height);
+            p.forEach(e => {
+                e.x += e.dx; e.y += e.dy;
+                if (e.x < 0 || e.x > c.width) e.dx *= -1;
+                if (e.y < 0 || e.y > c.height) e.dy *= -1;
+                x.beginPath(); x.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+                x.shadowBlur = 20; x.shadowColor = "rgba(255,255,255,.6)";
+                x.fillStyle = `rgba(255,255,255,${e.a})`; x.fill();
+            });
+            requestAnimationFrame(a);
+        })();
+    </script>
+
+</body>
+
+</html>

@@ -698,7 +698,7 @@
                         <div>
                             <strong>${w.name}</strong>
                             <div style="font-size:13px; color:var(--text-muted)">
-                                ${w.phone ? '<i class="fa-solid fa-phone"></i> ' + w.phone + ' | ' : ''}
+                                ${w.phone ? '<a href="tel:' + w.phone + '" style="color:var(--text-muted); text-decoration:none;"><i class="fa-solid fa-phone"></i> ' + w.phone + '</a> | ' : ''}
                                 Rating: ⭐${w.avgRating}
                             </div>
                             <div style="font-size:12px; margin-top:4px;">

@@ -42,8 +42,14 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
         skills: ['Construction', 'Agriculture'],
         stabilityScore: 65,
         avgRating: 4.7,
-        healthStatus: 'Fine'
+        healthStatus: 'Fine',
+        location: 'Perumbavoor',
+        phone: '9876543210',
+        availabilityStatus: true
     });
+
+    // Issues Collection
+    const issueReports = [];
 
     // --- CARPENTERS ---
     users.push(
@@ -282,6 +288,14 @@ app.get('/api/worker/data', isAuthenticated, isWorker, (req, res) => {
     const worker = users.find(u => u._id === req.session.userId);
     if (!worker) return res.status(401).send('User not found');
 
+    // Close expired jobs logic
+    const now = new Date();
+    jobs.forEach(j => {
+        if (j.expiryDate && new Date(j.expiryDate) < now && j.status === 'open') {
+            j.status = 'closed';
+        }
+    });
+
     // Open jobs
     const openJobs = jobs.filter(j => j.status === 'open');
     // Map employer name
@@ -338,6 +352,65 @@ app.get('/api/worker/data', isAuthenticated, isWorker, (req, res) => {
     });
 });
 
+
+
+// Profile Update
+app.post('/api/worker/update-profile', isAuthenticated, isWorker, (req, res) => {
+    const { skills, location, phone } = req.body;
+    const worker = users.find(u => u._id === req.session.userId);
+    if (worker) {
+        worker.skills = skills ? skills.split(',').map(s => s.trim()) : worker.skills;
+        worker.location = location || worker.location;
+        worker.phone = phone || worker.phone;
+    }
+    res.json({ success: true });
+});
+
+// Toggle Availability
+app.post('/api/worker/toggle-availability', isAuthenticated, isWorker, (req, res) => {
+    const worker = users.find(u => u._id === req.session.userId);
+    if (worker) {
+        worker.availabilityStatus = !worker.availabilityStatus;
+    }
+    res.json({ success: true, status: worker.availabilityStatus });
+});
+
+// Report Issue
+app.post('/api/worker/report-issue', isAuthenticated, isWorker, (req, res) => {
+    const { jobId, issueText } = req.body;
+    issueReports.push({
+        _id: generateId(),
+        workerId: req.session.userId,
+        jobId,
+        issueText,
+        date: new Date()
+    });
+    console.log("Issue Reported:", issueText);
+    res.json({ success: true });
+});
+
+// Score Details (Explainable AI)
+app.get('/api/worker/score-details', isAuthenticated, isWorker, (req, res) => {
+    const worker = users.find(u => u._id === req.session.userId);
+
+    // Re-calculate to show breakdown
+    const myHistory = workHistory.filter(h => h.workerId === worker._id);
+    const myApps = applications.filter(a => a.workerId === worker._id);
+
+    const scoreJobs = myHistory.length * 5;
+    const scoreSkills = worker.skills.length * 2;
+    const scoreApps = myApps.length * 1;
+
+    res.json({
+        total: worker.stabilityScore,
+        breakdown: [
+            { label: 'Completed Jobs', points: scoreJobs, desc: '5 points per job' },
+            { label: 'Skill Diversity', points: scoreSkills, desc: '2 points per skill' },
+            { label: 'Activity (Apps)', points: scoreApps, desc: '1 point per application' }
+        ]
+    });
+});
+
 // Apply
 app.post('/api/worker/apply', isAuthenticated, isWorker, (req, res) => {
     const { jobId } = req.body;
@@ -385,7 +458,8 @@ app.post('/api/employer/job', isAuthenticated, isEmployer, (req, res) => {
         location,
         employerId: req.session.userId,
         status: 'open',
-        createdAt: new Date()
+        createdAt: new Date(),
+        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Default 30 days expiry
     });
     res.json({ success: true });
 });
@@ -431,6 +505,7 @@ app.get('/api/employer/search-workers', isAuthenticated, isEmployer, (req, res) 
     // Filter by skill
     let matchingWorkers = users.filter(u =>
         u.role === 'worker' &&
+        u.availabilityStatus !== false && // Only available workers
         u.skills.some(s => s.toLowerCase().includes(skillLower))
     );
 

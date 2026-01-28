@@ -241,6 +241,153 @@
         .tab-content.active {
             display: block;
         }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        /* TOGGLE */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #CBD5E1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #10B981;
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
+        /* BADGE */
+        .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-rec {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        /* AI VOICE ASSISTANT */
+        .ai-mic-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--red));
+            color: white;
+            border: none;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5);
+            cursor: pointer;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .ai-mic-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.6);
+        }
+
+        .ai-mic-btn.listening {
+            animation: pulse-red 1.5s infinite;
+            background: linear-gradient(135deg, #EF4444, #B91C1C);
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
     </style>
 </head>
 
@@ -266,9 +413,19 @@
 
             <div class="user-profile-mini">
                 <div class="avatar-circle" id="nav-initial">U</div>
-                <div>
-                    <div id="nav-name">User</div>
-                    <div style="font-size:12px;color:#CBD5E1;">Worker</div>
+                <div style="flex:1">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div id="nav-name" style="font-weight:600;">User</div>
+                        <i class="fa-solid fa-pen-to-square"
+                            style="font-size:12px; cursor:pointer; color:var(--text-muted);"
+                            onclick="openEditProfile()"></i>
+                    </div>
+                    <div style="font-size:12px;color:#CBD5E1;">ID: <span id="nav-id">...</span></div>
+
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <div class="toggle-switch" id="avail-toggle" onclick="toggleAvailability()"></div>
+                        <span style="font-size:11px; color:#CBD5E1;" id="avail-text">Busy</span>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -288,6 +445,8 @@
                         <div class="stat-info">
                             <h3>Stability Score</h3>
                             <div class="value" id="dash-score">-</div>
+                            <div style="font-size:11px; color:var(--blue); cursor:pointer; text-decoration:underline;"
+                                onclick="viewScoreDetails()">View Details</div>
                         </div>
                     </div>
 
@@ -338,6 +497,11 @@
                     </p>
                     <div id="welfare-list" style="display:grid; gap:16px;">Loading...</div>
                 </div>
+
+                <div class="card" style="border-left: 4px solid var(--blue);">
+                    <h3><i class="fa-solid fa-graduation-cap"></i> Suggested Skill Growth</h3>
+                    <div id="training-list">Loading...</div>
+                </div>
             </div>
 
             <!-- ROUTINE CHECKUP -->
@@ -360,6 +524,60 @@
         </main>
     </div>
 
+    <!-- MODALS -->
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Edit Profile</h3>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" id="edit-phone" class="form-control" placeholder="10-digit number">
+            </div>
+            <div class="form-group">
+                <label>Current Location</label>
+                <input type="text" id="edit-location" class="form-control" placeholder="City, State">
+            </div>
+            <div class="form-group">
+                <label>Skills (comma separated)</label>
+                <input type="text" id="edit-skills" class="form-control" placeholder="e.g. Construction, Plumbing">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-primary" style="background:transparent; color:#333; border:1px solid #ccc"
+                    onclick="document.getElementById('edit-profile-modal').classList.remove('active')">Cancel</button>
+                <button class="btn-primary" onclick="submitProfileUpdate()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Details Modal -->
+    <div id="score-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Score Breakdown</h3>
+            <div id="score-breakdown-list" style="margin-bottom:20px;">Loading...</div>
+            <button class="btn-primary" style="width:100%"
+                onclick="document.getElementById('score-modal').classList.remove('active')">Close</button>
+        </div>
+    </div>
+
+    <!-- Issue Modal -->
+    <div id="issue-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Report Issue</h3>
+            <input type="hidden" id="issue-job-id">
+            <div class="form-group">
+                <label>Describe the issue with this job/employer:</label>
+                <textarea id="issue-text" class="form-control" rows="4"></textarea>
+            </div>
+            <button class="btn-primary" onclick="submitIssue()">Submit Report</button>
+        </div>
+    </div>
+
+    <!-- AI Floating Button -->
+    <button id="ai-mic" class="ai-mic-btn" onclick="toggleVoiceAI()">
+        <i class="fa-solid fa-microphone"></i>
+    </button>
+
     <script>
         // Init
         loadData();
@@ -375,7 +593,26 @@
 
                 // Profile
                 document.getElementById('nav-name').innerText = worker.name;
+                document.getElementById('nav-id').innerText = worker.adhithiId || 'N/A';
                 document.getElementById('nav-initial').innerText = worker.name.charAt(0).toUpperCase();
+
+                // Edit Profile Pre-fill
+                document.getElementById('edit-phone').value = worker.phone || '';
+                document.getElementById('edit-location').value = worker.location || '';
+                document.getElementById('edit-skills').value = worker.skills.join(', ');
+
+                // Availability
+                const toggle = document.getElementById('avail-toggle');
+                const label = document.getElementById('avail-text');
+                if (worker.availabilityStatus) {
+                    toggle.classList.add('active');
+                    label.innerText = 'Available';
+                    label.style.color = '#10B981';
+                } else {
+                    toggle.classList.remove('active');
+                    label.innerText = 'Busy';
+                    label.style.color = '#CBD5E1';
+                }
 
                 // Stats
                 document.getElementById('dash-score').innerText = worker.stabilityScore || 0;
@@ -392,7 +629,8 @@
                 renderHistory(history, jobs);
 
                 // Welfare
-                renderWelfare(welfareSchemes);
+                renderWelfare(welfareSchemes, worker.skills);
+                renderTraining(worker.skills);
 
                 // Checkups
                 renderCheckups(healthCheckups, upcomingCamps);
@@ -400,7 +638,90 @@
             } catch (e) { console.error(e); }
         }
 
-        function renderWelfare(schemes) {
+        /* --- ACTIONS --- */
+        async function submitProfileUpdate() {
+            const phone = document.getElementById('edit-phone').value;
+            const location = document.getElementById('edit-location').value;
+            const skills = document.getElementById('edit-skills').value;
+
+            await fetch('/api/worker/update-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, location, skills })
+            });
+            document.getElementById('edit-profile-modal').classList.remove('active');
+            loadData(); // refresh
+        }
+
+        async function toggleAvailability() {
+            const res = await fetch('/api/worker/toggle-availability', { method: 'POST' });
+            const data = await res.json();
+            // loadData() will update UI
+            loadData();
+        }
+
+        function openEditProfile() {
+            document.getElementById('edit-profile-modal').classList.add('active');
+        }
+
+        async function viewScoreDetails() {
+            document.getElementById('score-modal').classList.add('active');
+            const res = await fetch('/api/worker/score-details');
+            const data = await res.json();
+
+            document.getElementById('score-breakdown-list').innerHTML = data.breakdown.map(b => `
+                <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
+                    <div>
+                        <div style="font-weight:600;">${b.label}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${b.desc}</div>
+                    </div>
+                    <div style="font-weight:700; color:var(--blue); font-size:18px;">+${b.points}</div>
+                </div>
+            `).join('') + `<div style="text-align:right; font-weight:800; font-size:20px; margin-top:10px;">Total: ${data.total}</div>`;
+        }
+
+        function openIssueModal(jobId) {
+            document.getElementById('issue-job-id').value = jobId;
+            document.getElementById('issue-modal').classList.add('active');
+        }
+
+        async function submitIssue() {
+            const jobId = document.getElementById('issue-job-id').value;
+            const issueText = document.getElementById('issue-text').value;
+
+            await fetch('/api/worker/report-issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jobId, issueText })
+            });
+            alert("Issue reported. Support will contact you.");
+            document.getElementById('issue-modal').classList.remove('active');
+        }
+
+        /* --- RENDERERS --- */
+
+        function renderTraining(skills) {
+            const list = document.getElementById('training-list');
+            // Mock logic
+            let suggestions = [];
+            if (skills.includes('Construction')) suggestions.push('Advanced Masonry Certification');
+            if (skills.includes('Agriculture')) suggestions.push('Modern Irrigation Techniques');
+            if (skills.includes('Carpenter')) suggestions.push('Precision Woodworking Workshop');
+
+            if (suggestions.length === 0) suggestions.push('General Safety Training');
+
+            list.innerHTML = suggestions.map(t => `
+                <div style="padding:12px; display:flex; justify-content:space-between; align-items:center; background:#EFF6FF; border-radius:8px; margin-bottom:8px;">
+                    <div>
+                        <div style="font-weight:600; color:#1E40AF;">${t}</div>
+                        <div style="font-size:12px; color:#60A5FA;">Recommended based on your skills</div>
+                    </div>
+                    <button class="btn-primary" style="padding:6px 12px; font-size:12px;">Enroll</button>
+                </div>
+            `).join('');
+        }
+
+        function renderWelfare(schemes, workerSkills = []) {
             const list = document.getElementById('welfare-list');
             if (!schemes || schemes.length === 0) {
                 list.innerHTML = '<p>No schemes available.</p>';
@@ -408,8 +729,15 @@
             }
             list.innerHTML = schemes.map(s => `
                 <div style="padding:16px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
-                    <div style="font-weight:600; color:var(--blue); font-size:16px;">${s.title}</div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <div style="font-weight:600; color:var(--blue); font-size:16px;">${s.title}</div>
+                        ${workerSkills.some(skill => s.desc.includes(skill) || s.title.includes(skill)) ? '<span class="badge badge-rec">Matches You</span>' : ''}
+                    </div>
+                    
                     <div style="font-size:14px; color:var(--text-dark); margin:4px 0;">${s.desc}</div>
+                    
+                    ${workerSkills.some(skill => s.desc.includes(skill)) ? '<div style="font-size:11px; color:#166534; margin-bottom:6px;"><i class="fa-solid fa-check"></i> High relevance for ' + workerSkills[0] + ' workers</div>' : ''}
+
                     <a href="${s.link}" style="font-size:13px; color:var(--emerald); font-weight:500; text-decoration:none;">View Details &rarr;</a>
                 </div>
             `).join('');
@@ -522,8 +850,13 @@
                 const job = jobs.find(j => j._id === h.jobId) || { title: 'Unknown Job' };
                 return `
                     <div style="padding:10px; border-bottom:1px solid #eee;">
-                        Completed <strong>${job.title}</strong> on ${new Date(h.date).toLocaleDateString()}
-                        <span style="float:right; font-weight:bold; color:green">+$${h.wagePaid}</span>
+                        <div>
+                            Completed <strong>${job.title}</strong> on ${new Date(h.date).toLocaleDateString()}
+                            <span style="float:right; font-weight:bold; color:green">+$${h.wagePaid}</span>
+                        </div>
+                        <div style="margin-top:4px;">
+                             <button style="background:none; border:none; color:var(--red); font-size:11px; cursor:pointer; text-decoration:underline;" onclick="openIssueModal('${job._id}')">Report Issue</button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -548,13 +881,91 @@
 
         function switchTab(tab, el) {
             document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
-            el.classList.add('active');
+
+            // If el is provided, make it active. If not, find it.
+            if (el) {
+                el.classList.add('active');
+            } else {
+                // Find link by onclick attribute containing the tab name
+                const link = Array.from(document.querySelectorAll('.menu-link')).find(l => l.getAttribute('onclick').includes(`'${tab}'`));
+                if (link) link.classList.add('active');
+            }
 
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
 
             document.getElementById('page-title').innerText =
                 tab.charAt(0).toUpperCase() + tab.slice(1);
+        }
+
+        /* 
+           // AI Voice Assistant (Demo)
+           // Allows workers to navigate platform using voice.
+           // Future version can integrate multilingual LLMs for deeper understanding.
+        */
+        function toggleVoiceAI() {
+            const btn = document.getElementById('ai-mic');
+            const icon = btn.querySelector('i');
+
+            // Browser compatibility check
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Your browser does not support voice recognition. Try Chrome.");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.start();
+
+            // UI Update
+            btn.classList.add('listening');
+            icon.className = 'fa-solid fa-microphone-lines'; // Change icon
+
+            recognition.onresult = (event) => {
+                const command = event.results[0][0].transcript.toLowerCase();
+                console.log('Voice Command:', command);
+                processCommand(command);
+            };
+
+            recognition.onspeechend = () => {
+                recognition.stop();
+                resetMicUI();
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error', event.error);
+                resetMicUI();
+                alert('Did not catch that. Please make sure your mic is allowed.');
+            };
+
+            function resetMicUI() {
+                btn.classList.remove('listening');
+                icon.className = 'fa-solid fa-microphone';
+            }
+        }
+
+        function processCommand(cmd) {
+            if (cmd.includes('health') || cmd.includes('checkup') || cmd.includes('camp') || cmd.includes('doctor')) {
+                switchTab('checkup');
+            } else if (cmd.includes('job') || cmd.includes('work') || cmd.includes('apply')) {
+                switchTab('jobs');
+            } else if (cmd.includes('history') || cmd.includes('past')) {
+                switchTab('history');
+            } else if (cmd.includes('welfare') || cmd.includes('scheme') || cmd.includes('government')) {
+                switchTab('welfare');
+            } else if (cmd.includes('score') || cmd.includes('rating') || cmd.includes('points')) {
+                viewScoreDetails();
+            } else if (cmd.includes('profile') || cmd.includes('edit')) {
+                openEditProfile();
+            } else if (cmd.includes('dashboard') || cmd.includes('home')) {
+                switchTab('dashboard');
+            } else {
+                alert(`Sorry, I didn't understand "${cmd}". Try saying "Show me jobs" or "Check my score".`);
+            }
         }
 
         /* PARTICLES */
